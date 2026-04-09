@@ -9,9 +9,13 @@ def aggregate_beliefs(doctor_opinions: dict) -> dict:
 
     for doc_name, result in doctor_opinions.items():
         doc_weight = weights.get(doc_name, 0.0)
-        predictions = result.get("disease_predictions", {})
+        diseases = result.get("diseases", [])
+        confidences = result.get("confidence", [])
         
-        for disease, prob in predictions.items():
+        for i in range(min(len(diseases), len(confidences))):
+            disease = diseases[i]
+            prob = confidences[i]
+            
             # Standardize disease name roughly
             disease_key = str(disease).title().strip()
             

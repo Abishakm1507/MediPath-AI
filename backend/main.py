@@ -24,9 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class AnalyzeRequest(BaseModel):
-    symptoms: str
-
+from models.request_models import AnalyzeRequest
 @app.post("/analyze")
 async def analyze_symptoms(request: AnalyzeRequest):
     symptoms = request.symptoms
@@ -55,7 +53,7 @@ async def analyze_symptoms(request: AnalyzeRequest):
     # 4. Cost Optimization
     test_recommendations = []
     for doc, result in doctor_opinions.items():
-        test_recommendations.extend(result.get("recommended_tests", []))
+        test_recommendations.extend(result.get("tests", []))
     
     cost_optimized_plan = optimize_tests(test_recommendations)
 
@@ -70,9 +68,8 @@ async def analyze_symptoms(request: AnalyzeRequest):
     return {
         "doctor_opinions": doctor_opinions,
         "aggregated_diagnosis": aggregated_diagnosis,
-        "cost_optimized_plan": cost_optimized_plan,
+        "optimized_tests": cost_optimized_plan,
         "final_diagnosis": final_reasoning.get("final_diagnosis", ""),
         "confidence": final_reasoning.get("confidence", ""),
-        "reasoning": final_reasoning.get("reasoning", ""),
-        "recommended_next_steps": final_reasoning.get("recommended_next_steps", [])
+        "reasoning": final_reasoning.get("reasoning", "")
     }

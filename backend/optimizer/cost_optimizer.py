@@ -4,14 +4,14 @@ from collections import Counter
 
 def optimize_tests(test_recommendations: list) -> list:
     # 1. Load test costs
-    data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'tests.json')
+    data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'test_costs.json')
     try:
         with open(data_path, 'r') as f:
             test_costs = json.load(f)
     except FileNotFoundError:
         test_costs = {
             "Blood Test": 800,
-            "X-ray": 1500,
+            "X-Ray": 1500,
             "CT Scan": 6000,
             "MRI": 8000,
             "PCR": 1200,

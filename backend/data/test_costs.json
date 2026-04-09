@@ -1,0 +1,8 @@
+{
+  "Blood Test": 800,
+  "X-Ray": 1500,
+  "CT Scan": 6000,
+  "MRI": 8000,
+  "PCR": 1200,
+  "Sputum Test": 1000
+}

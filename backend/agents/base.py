@@ -12,9 +12,9 @@ class BaseAgent:
     async def analyze(self, symptoms: str):
         if not self.client:
             return {
-                "disease_predictions": {},
-                "confidence_scores": {},
-                "recommended_tests": [],
+                "diseases": [],
+                "confidence": [],
+                "tests": [],
                 "reasoning": "Error: GROQ_API_KEY not configured. Cannot generate analysis."
             }
             
@@ -24,9 +24,9 @@ class BaseAgent:
         Analyze the following symptoms: {symptoms}
         
         Provide your analysis in JSON format with the following keys:
-        - "disease_predictions": A dictionary mapping disease names to probability floats (0.0 to 1.0). Limit to top 3.
-        - "confidence_scores": A dictionary mapping disease names to confidence scores floats (0.0 to 1.0).
-        - "recommended_tests": A list of diagnostic tests you recommend (e.g., ["Blood Test", "X-ray"]).
+        - "diseases": A list of strings of the top 3 likely disease names.
+        - "confidence": A list of floats (0.0 to 1.0) representing confidence scores corresponding to each disease in the "diseases" list.
+        - "tests": A list of diagnostic tests you recommend (e.g., ["Blood Test", "X-ray"]).
         - "reasoning": A brief paragraph explaining your reasoning.
         
         Ensure the output is ONLY valid JSON.
@@ -46,8 +46,8 @@ class BaseAgent:
         except Exception as e:
             print(f"Error in agent: {e}")
             return {
-                "disease_predictions": {},
-                "confidence_scores": {},
-                "recommended_tests": [],
+                "diseases": [],
+                "confidence": [],
+                "tests": [],
                 "reasoning": f"Error during analysis: {str(e)}"
             }
