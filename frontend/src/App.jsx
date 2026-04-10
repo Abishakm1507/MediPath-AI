@@ -61,7 +61,7 @@ function App() {
               <FinalDiagnosisPanel 
                 diagnosis={result.final_diagnosis} 
                 confidence={result.confidence}
-                reasoning={result.reasoning}
+                reasoning={result.explanation || result.reasoning}
                 aggregatedDiagnosis={result.aggregated_diagnosis}
               />
             )}

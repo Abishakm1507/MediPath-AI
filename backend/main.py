@@ -15,6 +15,9 @@ from router.specialty_router import route_doctors
 from aggregator.belief_aggregator import aggregate_beliefs
 from optimizer.cost_optimizer import optimize_tests
 from reasoning.final_reasoning import generate_final_reasoning
+from reasoning.confidence_engine import calculate_confidence
+from reasoning.risk_engine import calculate_risk
+from reasoning.explainable_ai import generate_explanation
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -85,6 +88,22 @@ async def analyze_symptoms(request: AnalyzeRequest):
         aggregated_diagnosis, 
         cost_optimized_plan
     )
+    
+    final_diagnosis_str = final_reasoning.get("final_diagnosis", "Unknown")
+    
+    # Phase 5: Confidence, Risk and Explainability
+    symptom_severity = min(0.9, len(extracted_symptoms) * 0.15 + 0.3)  # basic severity heuristic
+    confidence_data = calculate_confidence(doctor_opinions, final_diagnosis_str, symptom_severity)
+    risk_level = calculate_risk(final_diagnosis_str)
+    
+    explanation_text = generate_explanation(
+        symptoms=symptoms_text,
+        doctor_outputs=doctor_opinions,
+        final_diagnosis=final_diagnosis_str,
+        confidence_score=confidence_data["confidence"],
+        agreement_score=confidence_data["agreement_score"],
+        risk_level=risk_level
+    )
 
     return {
         "selected_doctors": task_names,
@@ -92,7 +111,10 @@ async def analyze_symptoms(request: AnalyzeRequest):
         "aggregated_diagnosis": aggregated_diagnosis,
         "optimized_tests": cost_optimization_result["recommended_tests"],
         "estimated_cost": cost_optimization_result["estimated_cost"],
-        "final_diagnosis": final_reasoning.get("final_diagnosis", ""),
-        "confidence": final_reasoning.get("confidence", ""),
-        "reasoning": final_reasoning.get("reasoning", "")
+        "final_diagnosis": final_diagnosis_str,
+        "confidence": confidence_data["confidence"],
+        "agreement_score": confidence_data["agreement_score"],
+        "risk_level": risk_level,
+        "explanation": explanation_text,
+        "doctor_contributions": confidence_data.get("contributions", {})
     }
