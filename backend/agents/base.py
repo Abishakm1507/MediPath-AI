@@ -37,7 +37,7 @@ class BaseAgent:
                     {"role": "system", "content": "You are a helpful, extremely precise medical AI assistant that only outputs valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                model="llama-3.3-70b-versatile", # Groq model
+                model="llama-3.1-8b-instant", # Groq model
                 response_format={"type": "json_object"},
                 temperature=0.2
             )
