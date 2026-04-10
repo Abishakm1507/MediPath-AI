@@ -1,67 +1,82 @@
 import json
 import os
-from collections import Counter
 
-def optimize_tests(test_recommendations: list) -> list:
-    # 1. Load test costs
+TEST_INFORMATION_GAIN = {
+    "Blood Test": 0.6,
+    "ECG": 0.9,
+    "Chest X-ray": 0.7,
+    "MRI": 0.95,
+    "CT Scan": 0.9,
+    "Troponin Test": 0.85,
+    "Ultrasound": 0.75
+}
+
+def load_test_costs():
     data_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'test_costs.json')
     try:
         with open(data_path, 'r') as f:
-            test_costs = json.load(f)
+            return json.load(f)
     except FileNotFoundError:
-        test_costs = {
-            "Blood Test": 800,
-            "X-Ray": 1500,
-            "CT Scan": 6000,
-            "MRI": 8000,
-            "PCR": 1200,
-            "Sputum Test": 1000
-        }
+        return {}
 
-    normalized_recs = []
-    for test in test_recommendations:
-        test_lower = str(test).lower()
-        matched = False
-        for k in test_costs.keys():
-            if k.lower() in test_lower or test_lower in k.lower():
-                normalized_recs.append(k)
-                matched = True
-                break
-        if not matched:
-            normalized_recs.append(str(test).title())
-
-    # Count frequencies (information gain proxy)
-    counts = Counter(normalized_recs)
-    unique_tests = list(counts.keys())
+def optimize_tests(test_recommendations: list, budget: float = None) -> dict:
+    test_costs = load_test_costs()
     
-    default_cost = 2000
+    # Remove duplicates
+    unique_tests = list(set(test_recommendations))
     
     test_scores = []
+    
     for test in unique_tests:
-        cost = test_costs.get(test, default_cost)
-        info_gain = counts[test] 
-        score = info_gain / float(cost)
-        test_scores.append({
-            "test": test,
-            "cost": cost,
-            "information_gain": info_gain,
-            "score": score
-        })
-        
-    # Sort by score descending
+        # Match given test with our dataset
+        matched_key = None
+        for key in test_costs.keys():
+            if test.lower() in key.lower() or key.lower() in test.lower():
+                matched_key = key
+                break
+                
+        if matched_key:
+            cost = test_costs.get(matched_key, 2000)
+            info_gain = TEST_INFORMATION_GAIN.get(matched_key, 0.5)
+            score = info_gain / float(cost) if cost > 0 else 0
+            
+            # Prioritization Level
+            priority = "Optional"
+            if info_gain >= 0.9:
+                priority = "Critical"
+            elif info_gain >= 0.7:
+                priority = "Recommended"
+                
+            test_scores.append({
+                "test": matched_key,
+                "cost": cost,
+                "information_gain": info_gain,
+                "score": score,
+                "priority": priority
+            })
+            
+    # Greedy Algorithm: highest score first
     test_scores.sort(key=lambda x: x["score"], reverse=True)
     
-    plan = []
-    cumulative_confidence_proxy = 0.0
-    for idx, item in enumerate(test_scores):
-        cumulative_confidence_proxy += min(0.3, item["score"] * 3000) # Scaling for simulation
-        plan.append({
-            "step": idx + 1,
+    selected_tests = []
+    total_cost = 0.0
+    detailed_plan = []
+    
+    for item in test_scores:
+        if budget is not None:
+            if total_cost + item["cost"] > budget:
+                continue # Skip if it exceeds budget
+                
+        selected_tests.append(item["test"])
+        total_cost += item["cost"]
+        detailed_plan.append({
             "test": item["test"],
             "cost": item["cost"],
-            "reason": f"High info-to-cost ratio (Score: {item['score']:.6f}). Recommended by {item['information_gain']} agent(s)."
+            "priority": item["priority"]
         })
-        if cumulative_confidence_proxy >= 0.8:
-            break
-            
-    return plan
+        
+    return {
+        "recommended_tests": selected_tests,
+        "estimated_cost": total_cost,
+        "detailed_plan": detailed_plan
+    }

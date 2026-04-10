@@ -81,7 +81,7 @@ function App() {
             {!isLoading && result && (
               <div className="space-y-8 animate-fade-in">
                 <DoctorOpinions opinions={result.doctor_opinions} />
-                <CostOptimizerPanel plan={result.optimized_tests} />
+                <CostOptimizerPanel plan={result.optimized_tests} estimatedCost={result.estimated_cost} />
               </div>
             )}
           </div>

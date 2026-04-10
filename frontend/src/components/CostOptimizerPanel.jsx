@@ -1,10 +1,13 @@
 import React from 'react';
 import { IndianRupee, ShieldCheck } from 'lucide-react';
 
-const CostOptimizerPanel = ({ plan }) => {
+const CostOptimizerPanel = ({ plan, estimatedCost }) => {
   if (!plan || plan.length === 0) return null;
 
-  const totalCost = plan.reduce((sum, item) => sum + item.cost, 0);
+  // Handle both legacy (objects with cost) and new (strings) format
+  const totalCost = estimatedCost !== undefined 
+    ? estimatedCost 
+    : (typeof plan[0] === 'object' ? plan.reduce((sum, item) => sum + (item.cost || 0), 0) : 0);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
@@ -26,26 +29,36 @@ const CostOptimizerPanel = ({ plan }) => {
       
       <div className="p-5">
         <div className="space-y-4">
-          {plan.map((step, idx) => (
-            <div key={idx} className="flex relative">
-              {idx !== plan.length - 1 && (
-                <div className="absolute top-8 bottom-[-16px] left-5 w-0.5 bg-emerald-100 z-0"></div>
-              )}
-              <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-4 shadow-sm">
-                {step.step}
-              </div>
-              <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4 transition-all hover:bg-slate-100">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-slate-800 text-lg">{step.test}</h3>
-                  <div className="flex items-center text-emerald-700 font-medium">
-                    <IndianRupee className="w-4 h-4 mr-0.5" />
-                    {step.cost.toLocaleString()}
-                  </div>
+          {plan.map((step, idx) => {
+            const isObject = typeof step === 'object';
+            const testName = isObject ? step.test : step;
+            const stepNum = isObject && step.step ? step.step : idx + 1;
+            const cost = isObject && step.cost ? step.cost : null;
+            const reason = isObject && step.reason ? step.reason : "Selected optimally based on clinical information gain vs cost.";
+
+            return (
+              <div key={idx} className="flex relative">
+                {idx !== plan.length - 1 && (
+                  <div className="absolute top-8 bottom-[-16px] left-5 w-0.5 bg-emerald-100 z-0"></div>
+                )}
+                <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mr-4 shadow-sm">
+                  {stepNum}
                 </div>
-                <p className="text-sm text-slate-600">{step.reason}</p>
+                <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4 transition-all hover:bg-slate-100">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-slate-800 text-lg">{testName}</h3>
+                    {cost !== null && (
+                      <div className="flex items-center text-emerald-700 font-medium">
+                        <IndianRupee className="w-4 h-4 mr-0.5" />
+                        {cost.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-600">{reason}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
